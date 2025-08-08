@@ -34,3 +34,5 @@ python main.py
 ```
 
 ## License
+
+### edited though gitpython verison 1
