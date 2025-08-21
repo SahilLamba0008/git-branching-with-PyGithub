@@ -34,3 +34,5 @@ python main.py
 ```
 
 ## License
+
+### edited through vanilla GitHub API version 1
