@@ -13,6 +13,26 @@ else:
 HEADERS = {"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github.v3+json"}
 BASE_URL = "https://api.github.com"
 
+def create_pull_request(owner, repo, new_branch, base_branch, title, body=""):
+    repo_name = f"{owner}/{repo}"
+    pr_url = f"{BASE_URL}/repos/{repo_name}/pulls"
+    data = {
+        "title": title,
+        "head": new_branch,     # branch with your changes
+        "base": base_branch,    # where you want to merge (default branch usually)
+        "body": body,
+    }
+
+    pr_resp = requests.post(pr_url, headers=HEADERS, json=data)
+    if pr_resp.status_code == 422:
+        # This happens if a PR for the same branch already exists
+        print(f"⚠️ A PR for branch '{new_branch}' already exists.")
+        return None
+    pr_resp.raise_for_status()
+    pr_data = pr_resp.json()
+
+    print(f"🚀 PR created: {pr_data['html_url']}")
+    return pr_data["html_url"]
 
 def update_file_on_branch(owner, repo, new_branch, file_path, msg_line):
     repo_name = f"{owner}/{repo}"
@@ -80,7 +100,7 @@ def update_file_on_branch(owner, repo, new_branch, file_path, msg_line):
     return commit_url  # return commit link
 
 
-def comment_on_pr_for_branch(owner, repo, branch, comment_msg):
+# def comment_on_pr_for_branch(owner, repo, branch, comment_msg):
     """
     Finds an open PR for the given branch and posts a comment.
     """
@@ -114,14 +134,25 @@ def comment_on_pr_for_branch(owner, repo, branch, comment_msg):
 commit_link = update_file_on_branch(
     owner="SahilLamba0008",
     repo="git-branching-with-PyGithub",
-    new_branch="gitVanilla-1-method-comment",  # <-- branch to create/update
+    new_branch="gitVanilla-1-method-demo",  # <-- branch to create/update
     file_path="readme.md",
     msg_line="### edited through vanilla GitHub API version 1",
 )
 
-comment_on_pr_for_branch(
+base_branch = "master"  # or dynamically fetch it from repo like you already do
+
+pr_link = create_pull_request(
     owner="SahilLamba0008",
     repo="git-branching-with-PyGithub",
-    branch="gitVanilla-1",   # <-- PR branch name
-    comment_msg=f"Automated update made here: {commit_link}",
+    new_branch="gitVanilla-1-method-comment",
+    base_branch=base_branch,
+    title="Automated PR: Update readme.md",
+    body=f"This PR was created automatically. Commit: {commit_link}",
 )
+
+# comment_on_pr_for_branch(
+#     owner="SahilLamba0008",
+#     repo="git-branching-with-PyGithub",
+#     branch="gitVanilla-1",   # <-- PR branch name
+#     comment_msg=f"Automated update made here: {commit_link}",
+# )
